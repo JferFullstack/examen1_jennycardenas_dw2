@@ -1,4 +1,3 @@
-import './globals.css'
 import { ReactNode } from 'react'
 import { AppProvider } from '../context/AppContext'
 
