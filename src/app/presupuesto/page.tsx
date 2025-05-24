@@ -1,65 +1,42 @@
 'use client'
 
-import { useAppContext } from '@/context/AppContext'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState } from 'react'
+import { useAppContext } from '../../context/AppContext'
+import PresupuestoInput from '../../components/PresupuestoInput'
+import AlertaPresupuesto from '../../components/AlertaPresupuesto'
 
-export default function DashboardPage() {
-  const { usuario, presupuesto, gastos, cargarGastos } = useAppContext()
-  const router = useRouter()
+export default function PresupuestoPage() {
+  const { presupuesto, setPresupuesto } = useAppContext()
+  const [nuevoPresupuesto, setNuevoPresupuesto] = useState(presupuesto)
+  const [alerta, setAlerta] = useState('')
 
-  useEffect(() => {
-    if (!usuario) {
-      router.push('/login') // Redirige si no está logueado
+  const manejarCambio = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNuevoPresupuesto(Number(e.target.value))
+  }
+
+  const manejarSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (nuevoPresupuesto <= 0) {
+      setAlerta('El presupuesto debe ser mayor a cero')
+      return
     }
-  }, [usuario, router])
-
-  useEffect(() => {
-    cargarGastos()
-  }, [])
-
-  // Calcular total gastado
-  const totalGastado = gastos.reduce((acc, gasto) => acc + Number(gasto.monto), 0)
-
-  // Porcentaje usado
-  const porcentaje = presupuesto > 0 ? (totalGastado / presupuesto) * 100 : 0
-
-  let mensaje = ''
-  let color = ''
-
-  if (porcentaje >= 100) {
-    mensaje = 'Has superado el límite del presupuesto, debes ajustar gastos'
-    color = 'red'
-  } else if (porcentaje >= 80) {
-    mensaje = 'Has alcanzado el 80% del presupuesto'
-    color = 'yellow'
+    setPresupuesto(nuevoPresupuesto)
+    setAlerta('Presupuesto actualizado correctamente')
+    setTimeout(() => setAlerta(''), 3000)
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Panel de Gastos</h1>
-      <p><strong>Usuario:</strong> {usuario}</p>
-      <p><strong>Presupuesto:</strong> L. {presupuesto}</p>
-      <p><strong>Total Gastado:</strong> L. {totalGastado}</p>
-
-      {mensaje && (
-        <p style={{ color }}>{mensaje}</p>
-      )}
-
-      <hr />
-
-      <h2>Lista de Gastos</h2>
-      {gastos.length === 0 ? (
-        <p>No hay gastos registrados aún.</p>
-      ) : (
-        <ul>
-          {gastos.map((gasto, i) => (
-            <li key={i}>
-              <strong>{gasto.categoria}</strong> - L. {gasto.monto} - {gasto.fecha}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div>
+      <h1>Presupuesto Mensual</h1>
+      {alerta && <AlertaPresupuesto mensaje={alerta} />}
+      <form onSubmit={manejarSubmit}>
+        <PresupuestoInput
+          valor={nuevoPresupuesto}
+          onChange={manejarCambio}
+        />
+        <button type="submit">Actualizar Presupuesto</button>
+      </form>
+      <p>Presupuesto actual: ${presupuesto}</p>
     </div>
   )
 }
